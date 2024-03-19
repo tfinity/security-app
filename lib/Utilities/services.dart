@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 
-List<String> emergencyContacts = [];
+// List<String> emergencyContacts = [];
 
 Future<bool> sendSms({
   required String phoneNumber,
@@ -63,13 +63,13 @@ Future<bool> _handleLocationPermission() async {
   return true;
 }
 
-void loadContacts() async {
-  final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-  final contacts = await FirebaseFirestore.instance
-      .collection('Users')
-      .doc(userId)
-      .collection('Contacts')
-      .get();
-  emergencyContacts =
-      contacts.docs.map((e) => e.data()['number'] as String).toList();
-}
+// void loadContacts() async {
+//   final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+//   final contacts = await FirebaseFirestore.instance
+//       .collection('Users')
+//       .doc(userId)
+//       .collection('Contacts')
+//       .get();
+//   emergencyContacts =
+//       contacts.docs.map((e) => e.data()['number'] as String).toList();
+// }

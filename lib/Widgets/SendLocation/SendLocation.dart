@@ -18,11 +18,13 @@ class SendLocation extends StatefulWidget {
 class SendLocationState extends State<SendLocation> {
   Position? _curentPosition;
   String? _curentAddress;
+  String guardianPhone = '';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      _loadPhone();
       _curentPosition = await getCurrentLocation();
       await _getAddressFromLatLon();
     });
@@ -69,7 +71,7 @@ class SendLocationState extends State<SendLocation> {
                 style: TextStyle(fontSize: 20, color: Colors.black),
               ),
               SizedBox(height: 10),
-              if (_curentPosition != null) Text(_curentAddress!),
+              if (_curentAddress != null) Text(_curentAddress!),
               ElevatedButton(
                   child: Text("GET LOCATION"),
                   onPressed: () async {
@@ -85,14 +87,14 @@ class SendLocationState extends State<SendLocation> {
                       await Permission.sms.request();
                       return;
                     }
-                    for (var contact in emergencyContacts) {
-                      print('contact $contact');
-                      await sendSms(
-                        phoneNumber: contact,
-                        location:
-                            "https://www.google.com/maps/search/?api=1&query=${_curentPosition!.latitude}%2C${_curentPosition!.longitude}. $_curentAddress",
-                      );
-                    }
+
+                    print('contact $guardianPhone');
+                    await sendSms(
+                      phoneNumber: guardianPhone,
+                      location:
+                          "https://www.google.com/maps/search/?api=1&query=${_curentPosition!.latitude}%2C${_curentPosition!.longitude}. $_curentAddress",
+                    );
+
                     // String recipients = "";
                     // List<TContact> contactList =
                     //     await DatabaseHelper().getContactList();
@@ -159,5 +161,13 @@ class SendLocationState extends State<SendLocation> {
         ),
       ),
     );
+  }
+
+  void _loadPhone() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final contacts =
+        await FirebaseFirestore.instance.collection('Users').doc(userId).get();
+    guardianPhone = contacts.data()?['phone'] ?? '';
+    print('guardian: $guardianPhone');
   }
 }
