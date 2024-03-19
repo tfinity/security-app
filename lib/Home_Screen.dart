@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:secure_me/Utilities/services.dart';
@@ -94,9 +96,19 @@ class _HomeScreenState extends State<HomeScreen> {
           print('shaking');
           _locationState.currentState!
               .ShowModel(_locationState.currentState!.context);
-          // String messageBody =
-          //     "https://www.google.com/maps/search/?api=1&query=${position?.latitude}%2C${position?.longitude}";
-          // await sendSms(phoneNumber: '0900786011', location: messageBody);
+          final number = await _loadPhone();
+          String messageBody =
+              "https://www.google.com/maps/search/?api=1&query=${position?.latitude}%2C${position?.longitude}";
+          await sendSms(phoneNumber: number, location: messageBody);
         });
+  }
+
+  Future<String> _loadPhone() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final contacts =
+        await FirebaseFirestore.instance.collection('Users').doc(userId).get();
+    final guardianPhone = contacts.data()?['phone'] ?? '';
+    print('guardian: $guardianPhone');
+    return guardianPhone;
   }
 }
