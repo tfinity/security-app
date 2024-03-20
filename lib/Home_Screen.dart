@@ -10,6 +10,7 @@ import 'package:secure_me/Widgets/home_widgets/Emergency.dart';
 import 'package:secure_me/Widgets/home_widgets/LiveWidget.dart';
 import 'package:secure_me/Widgets/SendLocation/SendLocation.dart';
 import 'package:shake/shake.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -94,8 +95,15 @@ class _HomeScreenState extends State<HomeScreen> {
         minimumShakeCount: 1,
         onPhoneShake: () async {
           print('shaking');
-          _locationState.currentState!
-              .ShowModel(_locationState.currentState!.context);
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          final isShakeEnabled = prefs.getBool('shakeEnabled') ?? false;
+          if (!isShakeEnabled) {
+            return;
+          }
+          if (ModalRoute.of(context)!.isCurrent) {
+            _locationState.currentState!
+                .ShowModel(_locationState.currentState!.context);
+          }
           final number = await _loadPhone();
           String messageBody =
               "https://www.google.com/maps/search/?api=1&query=${position?.latitude}%2C${position?.longitude}";

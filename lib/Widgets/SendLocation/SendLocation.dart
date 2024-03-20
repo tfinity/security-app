@@ -7,6 +7,8 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:secure_me/Utilities/services.dart';
+import 'package:secure_me/Widgets/SendLocation/location_shake_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SendLocation extends StatefulWidget {
   const SendLocation({super.key});
@@ -16,108 +18,11 @@ class SendLocation extends StatefulWidget {
 }
 
 class SendLocationState extends State<SendLocation> {
-  Position? _curentPosition;
-  String? _curentAddress;
-  String guardianPhone = '';
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      _loadPhone();
-      _curentPosition = await getCurrentLocation();
-      await _getAddressFromLatLon();
-    });
-  }
-
-  Future<bool> _isPermissionGranted() async =>
-      await Permission.sms.status.isGranted;
-
-  Future<void> _getAddressFromLatLon() async {
-    try {
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-          _curentPosition!.latitude, _curentPosition!.longitude);
-
-      Placemark place = placemarks[0];
-      setState(() {
-        _curentAddress =
-            "${place.locality},${place.postalCode},${place.street},";
-      });
-    } catch (e) {
-      Fluttertoast.showToast(msg: e.toString());
-    }
-  }
-
   void ShowModel(BuildContext context) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height / 1.4,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "SEND YOUR CUURENT LOCATION",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, color: Colors.black),
-              ),
-              SizedBox(height: 10),
-              if (_curentAddress != null) Text(_curentAddress!),
-              ElevatedButton(
-                  child: Text("GET LOCATION"),
-                  onPressed: () async {
-                    await getCurrentLocation();
-                  }),
-              SizedBox(height: 10),
-              ElevatedButton(
-                  child: Text("SEND ALERT"),
-                  onPressed: () async {
-                    if (!(await _isPermissionGranted())) {
-                      Fluttertoast.showToast(
-                          msg: "SMS Permission is not enabled");
-                      await Permission.sms.request();
-                      return;
-                    }
-
-                    print('contact $guardianPhone');
-                    await sendSms(
-                      phoneNumber: guardianPhone,
-                      location:
-                          "https://www.google.com/maps/search/?api=1&query=${_curentPosition!.latitude}%2C${_curentPosition!.longitude}. $_curentAddress",
-                    );
-
-                    // String recipients = "";
-                    // List<TContact> contactList =
-                    //     await DatabaseHelper().getContactList();
-                    // print(contactList.length);
-                    // if (contactList.isEmpty) {
-                    //   Fluttertoast.showToast(msg: "emergency contact is empty");
-                    // } else {
-                    //   String messageBody =
-                    //       "https://www.google.com/maps/search/?api=1&query=${_curentPosition!.latitude}%2C${_curentPosition!.longitude}. $_curentAddress";
-
-                    //   if (await _isPermissionGranted()) {
-                    //     contactList.forEach((element) {
-                    //       _sendSms("${element.number}",
-                    //           "i am in trouble $messageBody");
-                    //     });
-                    //   } else {
-                    //     Fluttertoast.showToast(msg: "something wrong");
-                    //   }
-                    // }
-                  }),
-            ],
-          ),
-        );
+        return LocationShakeWidget();
       },
     );
   }
@@ -161,13 +66,5 @@ class SendLocationState extends State<SendLocation> {
         ),
       ),
     );
-  }
-
-  void _loadPhone() async {
-    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    final contacts =
-        await FirebaseFirestore.instance.collection('Users').doc(userId).get();
-    guardianPhone = contacts.data()?['phone'] ?? '';
-    print('guardian: $guardianPhone');
   }
 }

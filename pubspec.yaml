@@ -52,6 +52,7 @@ dependencies:
   geolocator: ^10.1.0
   permission_handler: ^11.1.0
   telephony: ^0.2.0
+  shared_preferences: ^2.2.2
 
   
 dev_dependencies:
